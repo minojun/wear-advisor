@@ -95,6 +95,12 @@ function init() {
     maxDate.setDate(maxDate.getDate() + 15);
     els.dateInput.max = formatDateISO(maxDate);
 
+    // Set default time
+    const now = new Date();
+    const nextHour = now.getHours() + 1;
+    els.departureTime.value = `${String(nextHour % 24).padStart(2, '0')}:00`;
+    els.returnTime.value = `${String((nextHour + 1) % 24).padStart(2, '0')}:00`;
+
     // Event listeners
     els.locationInput.addEventListener('input', handleLocationInput);
     els.locationInput.addEventListener('focus', () => {
