@@ -98,7 +98,10 @@ function init() {
     // Event listeners
     els.locationInput.addEventListener('input', handleLocationInput);
     els.locationInput.addEventListener('focus', () => {
-        if (els.suggestions.children.length > 0) {
+        const query = els.locationInput.value.trim();
+        if (query.length < 2) {
+            showHistory();
+        } else if (els.suggestions.children.length > 0) {
             els.suggestions.classList.add('active');
         }
     });
@@ -122,8 +125,7 @@ function handleLocationInput(e) {
     clearTimeout(searchTimeout);
 
     if (query.length < 2) {
-        els.suggestions.classList.remove('active');
-        els.suggestions.innerHTML = '';
+        showHistory();
         return;
     }
 
@@ -205,6 +207,89 @@ function selectLocation(loc) {
     };
     els.locationInput.value = loc.name;
     els.suggestions.classList.remove('active');
+    saveHistory(selectedLocation);
+}
+
+// ==========================================
+// History
+// ==========================================
+
+const HISTORY_KEY = 'wear_advisor_history';
+
+function getHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch {
+        return [];
+    }
+}
+
+function saveHistory(loc) {
+    // 現在地検索時は履歴に残さない
+    if(!loc || !loc.name || loc.name === '現在地') return;
+    let history = getHistory();
+    // 既存の同じ場所があれば削除（先頭に移動するため）
+    history = history.filter(item => item.name !== loc.name);
+    history.unshift(loc);
+    // 直近5件までに制限
+    if(history.length > 5) history = history.slice(0, 5);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function removeHistory(index) {
+    let history = getHistory();
+    history.splice(index, 1);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    showHistory();
+}
+
+function showHistory() {
+    const history = getHistory();
+    if(history.length === 0) {
+        els.suggestions.innerHTML = '';
+        els.suggestions.classList.remove('active');
+        return;
+    }
+    
+    els.suggestions.innerHTML = `
+        <div class="suggestion-header" style="padding: 8px 16px; font-size: 0.8rem; color: var(--text-muted); border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center;">
+            <span>最近の検索</span>
+        </div>
+    ` + history.map((loc, i) => `
+        <div class="suggestion-item history-item" data-index="${i}">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div>
+                    <span style="color: var(--text-muted); margin-right: 8px;">🕒</span>
+                    <span class="suggestion-name">${loc.name}</span>
+                    <div class="suggestion-detail">${[loc.admin1, loc.country].filter(Boolean).join(', ')}</div>
+                </div>
+                <button class="delete-history-btn" data-index="${i}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 1.1rem; border-radius: 4px;" title="履歴から削除" onmouseover="this.style.color='#f0f0f5'" onmouseout="this.style.color='var(--text-muted)'">×</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // 履歴クリック時の処理
+    els.suggestions.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-history-btn')) return; // 削除ボタンクリック時は無視
+            const idx = parseInt(item.dataset.index);
+            const loc = history[idx];
+            selectLocation(loc);
+            els.locationInput.blur(); // フォーカスを外す
+        });
+    });
+
+    // 削除ボタンクリック時の処理
+    els.suggestions.querySelectorAll('.delete-history-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 親要素のクリックイベントを発火させない
+            const idx = parseInt(btn.dataset.index);
+            removeHistory(idx);
+            els.locationInput.focus(); // 入力欄にフォーカスを維持
+        });
+    });
+
+    els.suggestions.classList.add('active');
 }
 
 // ==========================================
