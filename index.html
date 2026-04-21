@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>きょう何着てく？ - お出かけ服装アドバイザー</title>
+    <meta name="description" content="場所と外出時間を入れるだけで、最適な服装と持ち物を提案。天気予報をもう読み解く必要なし。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Ambient background -->
+        <div class="ambient-bg">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+
+        <!-- Header -->
+        <header class="header" id="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">👔</span>
+                    <h1>きょう何着てく？</h1>
+                </div>
+                <p class="tagline">天気を読み解く必要、もうない。</p>
+            </div>
+        </header>
+
+        <!-- Input Section -->
+        <section class="input-section" id="input-section">
+            <div class="input-card glass-card">
+                <h2 class="section-title">
+                    <span class="title-icon">📍</span>
+                    お出かけ情報
+                </h2>
+
+                <div class="input-group" id="location-group">
+                    <label for="location-input">場所</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="location-input" placeholder="例: 東京、大阪、渋谷..." autocomplete="off">
+                        <button class="gps-btn" id="gps-btn" title="現在地を使う">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="location-suggestions" id="location-suggestions"></div>
+                </div>
+
+                <div class="time-inputs">
+                    <div class="input-group">
+                        <label for="departure-time">出発時間</label>
+                        <input type="time" id="departure-time" value="08:00">
+                    </div>
+                    <div class="time-arrow">→</div>
+                    <div class="input-group">
+                        <label for="return-time">帰宅時間</label>
+                        <input type="time" id="return-time" value="18:00">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="date-input">日付</label>
+                    <input type="date" id="date-input">
+                </div>
+
+                <button class="submit-btn" id="submit-btn">
+                    <span class="btn-text">アドバイスをもらう</span>
+                    <span class="btn-icon">✨</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading -->
+        <section class="loading-section hidden" id="loading-section">
+            <div class="loading-card glass-card">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">天気データを取得中...</p>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section hidden" id="results-section">
+            <!-- Weather Summary -->
+            <div class="weather-summary glass-card" id="weather-summary">
+                <div class="weather-header">
+                    <div class="weather-icon-large" id="weather-icon-large">☀️</div>
+                    <div class="weather-headline">
+                        <h2 id="location-name">東京</h2>
+                        <p class="weather-date" id="weather-date">4月15日（水）</p>
+                    </div>
+                </div>
+                <div class="weather-stats" id="weather-stats">
+                    <!-- Dynamically filled -->
+                </div>
+                <div class="hourly-chart" id="hourly-chart">
+                    <!-- Hourly weather strip -->
+                </div>
+            </div>
+
+            <!-- Main Advice -->
+            <div class="advice-grid">
+                <!-- Clothing Card -->
+                <div class="advice-card glass-card" id="clothing-card">
+                    <div class="advice-header">
+                        <span class="advice-icon">👕</span>
+                        <h3>服装</h3>
+                    </div>
+                    <div class="advice-body" id="clothing-advice">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+
+                <!-- Umbrella Card -->
+                <div class="advice-card glass-card" id="umbrella-card">
+                    <div class="advice-header">
+                        <span class="advice-icon">☂️</span>
+                        <h3>傘</h3>
+                    </div>
+                    <div class="advice-body" id="umbrella-advice">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+
+                <!-- Items Card -->
+                <div class="advice-card glass-card" id="items-card">
+                    <div class="advice-header">
+                        <span class="advice-icon">🎒</span>
+                        <h3>持ち物</h3>
+                    </div>
+                    <div class="advice-body" id="items-advice">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+
+                <!-- Heads Up Card -->
+                <div class="advice-card glass-card warning-card" id="warning-card">
+                    <div class="advice-header">
+                        <span class="advice-icon">⚠️</span>
+                        <h3>注意ポイント</h3>
+                    </div>
+                    <div class="advice-body" id="warning-advice">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- One-line summary -->
+            <div class="summary-card glass-card" id="summary-card">
+                <p class="summary-text" id="summary-text"></p>
+            </div>
+
+            <!-- Try again -->
+            <button class="reset-btn" id="reset-btn">
+                <span>別の条件で調べる</span>
+            </button>
+        </section>
+
+        <footer class="footer">
+            <p>Powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> 天気API</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
