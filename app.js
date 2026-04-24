@@ -95,11 +95,31 @@ function init() {
     maxDate.setDate(maxDate.getDate() + 15);
     els.dateInput.max = formatDateISO(maxDate);
 
-    // Set default time
+    // デフォルト時間をセット（次の30分区切り）
     const now = new Date();
-    const nextHour = now.getHours() + 1;
-    els.departureTime.value = `${String(nextHour % 24).padStart(2, '0')}:00`;
-    els.returnTime.value = `${String((nextHour + 1) % 24).padStart(2, '0')}:00`;
+    let h = now.getHours();
+    let m = now.getMinutes();
+
+    if (m < 30) {
+        m = 30;
+    } else {
+        m = 0;
+        h = (h + 1) % 24;
+    }
+
+    const depTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const retTime = `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+    els.departureTime.value = depTime;
+    els.returnTime.value = retTime;
+
+    // 前回入力した場所があれば初期値としてセット
+    const history = getHistory();
+    if (history.length > 0) {
+        const lastLoc = history[0];
+        selectedLocation = lastLoc;
+        els.locationInput.value = lastLoc.name;
+    }
 
     // Event listeners
     els.locationInput.addEventListener('input', handleLocationInput);
