@@ -160,7 +160,7 @@ function handleLocationInput(e) {
 
 async function searchLocation(query) {
     try {
-        const res = await fetch(
+        const res = await fetchWithTimeout(
             `${API.geocoding}?name=${encodeURIComponent(query)}&count=10&language=ja&format=json`
         );
         const data = await res.json();
@@ -219,6 +219,9 @@ async function searchLocation(query) {
         els.suggestions.classList.add('active');
     } catch (err) {
         console.error('Location search error:', err);
+        els.suggestions.innerHTML =
+            '<div class="suggestion-item"><span class="suggestion-name">検索に失敗しました。通信環境を確認してください</span></div>';
+        els.suggestions.classList.add('active');
     }
 }
 
@@ -417,7 +420,11 @@ async function handleSubmit() {
         console.error('Weather fetch error:', err);
         els.loadingSection.classList.add('hidden');
         els.inputSection.classList.remove('hidden');
-        showError('天気データの取得に失敗しました。もう一度お試しください。');
+        const msg =
+            err.name === 'AbortError'
+                ? '接続がタイムアウトしました。通信環境を確認して、もう一度お試しください。'
+                : (err.message || '天気データの取得に失敗しました。もう一度お試しください。');
+        showError(msg);
     }
 }
 
@@ -432,6 +439,17 @@ async function searchAndSelectFirst(query) {
         }
     } catch {
         // ignore
+    }
+}
+
+// fetch with a timeout so a hung request doesn't spin the loader forever
+async function fetchWithTimeout(url, timeoutMs = 10000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(url, { signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
     }
 }
 
@@ -455,9 +473,11 @@ async function fetchWeather(location, dateStr) {
         end_date: dateStr,
     });
 
-    const res = await fetch(`${API.weather}?${params}`);
-    if (!res.ok) throw new Error('API request failed');
-    return res.json();
+    const res = await fetchWithTimeout(`${API.weather}?${params}`);
+    if (!res.ok) throw new Error('天気サーバーからエラーが返ってきました（' + res.status + '）');
+    const data = await res.json();
+    if (data.error) throw new Error(data.reason || '天気データを取得できませんでした');
+    return data;
 }
 
 // ==========================================
