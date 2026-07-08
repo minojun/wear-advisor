@@ -343,11 +343,6 @@ async function handleGPS() {
 
         const { latitude, longitude } = position.coords;
 
-        // Reverse geocoding via Open-Meteo
-        const res = await fetch(
-            `${API.geocoding}?name=_&count=1&language=ja&format=json&latitude=${latitude}&longitude=${longitude}`
-        );
-
         // Just use coordinates directly — set a meaningful name
         selectedLocation = {
             name: '現在地',
@@ -358,7 +353,7 @@ async function handleGPS() {
 
         // Try to get a city name from reverse lookup
         try {
-            const reverseRes = await fetch(
+            const reverseRes = await fetchWithTimeout(
                 `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ja`
             );
             const reverseData = await reverseRes.json();
@@ -404,6 +399,13 @@ async function handleSubmit() {
         return;
     }
 
+    // 日をまたぐ範囲は取得データ（1日分）で計算できないため弾く
+    // "HH:MM" 形式はゼロ埋めされているので文字列比較で大小が正しく判定できる
+    if (returnTime < departure) {
+        showError('帰宅時間は出発時間より後にしてください（日をまたぐ外出にはまだ対応していません）');
+        return;
+    }
+
     // Show loading
     els.inputSection.classList.add('hidden');
     els.loadingSection.classList.remove('hidden');
@@ -430,7 +432,7 @@ async function handleSubmit() {
 
 async function searchAndSelectFirst(query) {
     try {
-        const res = await fetch(
+        const res = await fetchWithTimeout(
             `${API.geocoding}?name=${encodeURIComponent(query)}&count=1&language=ja&format=json`
         );
         const data = await res.json();
